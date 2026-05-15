@@ -19,7 +19,7 @@ import argparse
 import textwrap
 
 
-def generate_env_yaml(mall_name: str, lang: str) -> str:
+def generate_env_yaml(mall_name: str, mall_name_en: str, lang: str) -> str:
     return textwrap.dedent(f"""\
 # =====================================================================
 # {mall_name} AI 电商客服 - 配置文件
@@ -69,7 +69,7 @@ LLMConfig:
     4. 如果問題超出你嘅處理範圍，建議用戶轉接人工客服
     始終僅輸出純文本，唔好使用任何格式化符號、Markdown 或括號註釋。請用粵語（繁體中文）回覆。
   SystemPromptEn: |
-    You are a professional e-commerce customer service assistant for "{mall_name}".
+    You are a professional e-commerce customer service assistant for "{mall_name_en}".
     Your responsibilities include: order status inquiries, returns and exchanges, product questions, shipping tracking, and promotions.
     Please follow these principles:
     1. Keep responses concise, within 3 sentences per reply
@@ -82,7 +82,7 @@ LLMConfig:
 WelcomeMessage:
   zh: 您好，欢迎来到{mall_name}！我是AI客服小助手，可以帮您查询订单、处理退换货、了解优惠活动，请问有什么可以帮您？
   yue: 您好，歡迎嚟到{mall_name}！我係AI客服小助手，可以幫您查詢訂單、處理退換貨、了解優惠活動，請問有咩可以幫到您？
-  en: "Welcome to {mall_name}! I'm your AI assistant. I can help with orders, returns, shipping, and promotions. How can I help you?"
+  en: "Welcome to {mall_name_en}! I'm your AI assistant. I can help with orders, returns, shipping, and promotions. How can I help you?"
 
 # 数字人配置（可选）
 # 三项全部填写 -> 启用数字人模式，TTSConfig 自动设为 dummy
@@ -128,7 +128,7 @@ EndKeywords:
 FarewellMessage:
   zh: 感谢您光临{mall_name}，祝您购物愉快，再见！
   yue: 多謝您光臨{mall_name}，祝您購物愉快，再見！
-  en: Thank you for visiting {mall_name}. Happy shopping and goodbye!
+  en: Thank you for visiting {mall_name_en}. Happy shopping and goodbye!
 
 # 转人工关键词（用户原话匹配命中即触发转人工流程）
 TransferKeywords:
@@ -822,26 +822,44 @@ if ! "$VENV_PY" -c "import flask, envyaml, loguru, tencentcloud" 2>/dev/null; th
     }}
 fi
 
-# 5. HTTPS 自签证书（--https 模式）
+# 5. Auto-detect public IP & HTTPS
+PUBLIC_IP=$(curl -s --max-time 3 https://ifconfig.me 2>/dev/null | tr -d '[:space:]' || true)
 USE_HTTPS=0
-for arg in "$@"; do
-    [ "$arg" = "--https" ] && USE_HTTPS=1
-done
+for arg in "$@"; do [ "$arg" = "--https" ] && USE_HTTPS=1; done
+if [ "$USE_HTTPS" -eq 0 ] && echo "$PUBLIC_IP" | grep -qE '^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$' && [ "$PUBLIC_IP" != "127.0.0.1" ]; then
+    echo "Public IP detected: $PUBLIC_IP, auto-enabling HTTPS"
+    USE_HTTPS=1
+fi
+
+CERT_DIR="certs"
+if [ "$USE_HTTPS" -eq 1 ]; then
+    if [ ! -f "$CERT_DIR/cert.pem" ]; then
+        if command -v openssl >/dev/null 2>&1; then
+            echo "Generating self-signed certificate..."
+            mkdir -p "$CERT_DIR"
+            openssl req -x509 -newkey rsa:2048 -nodes \\
+                -keyout "$CERT_DIR/key.pem" -out "$CERT_DIR/cert.pem" \\
+                -days 365 -subj "/CN=localhost" 2>/dev/null
+            echo "⚠️  Self-signed cert: browser will show security warning on first visit"
+        else
+            echo "⚠️  openssl not found, falling back to HTTP"
+            USE_HTTPS=0
+        fi
+    fi
+fi
+
+PROTO="http"; [ "$USE_HTTPS" -eq 1 ] && PROTO="https"
+if [ -n "$PUBLIC_IP" ] && [ "$PUBLIC_IP" != "127.0.0.1" ]; then
+    echo "🚀 Starting {mall_name} AI Customer Service"
+    echo "   Public: $PROTO://$PUBLIC_IP:8080"
+    echo "   Local:  $PROTO://localhost:8080"
+else
+    echo "🚀 Starting {mall_name} AI Customer Service on $PROTO://localhost:8080"
+fi
 
 if [ "$USE_HTTPS" -eq 1 ]; then
-    CERT_DIR="certs"
-    if [ ! -f "$CERT_DIR/cert.pem" ]; then
-        echo "Generating self-signed certificate..."
-        mkdir -p "$CERT_DIR"
-        openssl req -x509 -newkey rsa:2048 -nodes \\
-            -keyout "$CERT_DIR/key.pem" -out "$CERT_DIR/cert.pem" \\
-            -days 365 -subj "/CN=localhost" 2>/dev/null
-        echo "⚠️  Self-signed cert: browser will show security warning on first visit"
-    fi
-    echo "Starting {mall_name} AI Customer Service on https://0.0.0.0:8080"
     exec "$VENV_PY" app.py --https
 else
-    echo "Starting {mall_name} AI Customer Service on http://0.0.0.0:8080"
     exec "$VENV_PY" app.py
 fi
 """)
@@ -854,9 +872,21 @@ def main():
     )
     parser.add_argument("output_dir", help="输出目录路径")
     parser.add_argument("--name", default="云尚商城", help="商城名称（默认: 云尚商城）")
+    parser.add_argument("--name-en", default=None, dest="name_en",
+                        help="English store name (default: auto-derived from --name, e.g. 'CloudShop Mall')")
     parser.add_argument("--lang", default="both", choices=["zh", "en", "both"],
                         help="支持的语言（默认: both）")
     args = parser.parse_args()
+
+    # Derive English name: use --name-en if provided, otherwise use --name as-is
+    # (for CJK names, default to "CloudShop Mall")
+    if args.name_en is None:
+        # If name contains CJK characters, use default English name
+        import re
+        if re.search(r'[\u4e00-\u9fff]', args.name):
+            args.name_en = "CloudShop Mall"
+        else:
+            args.name_en = args.name
 
     output_dir = os.path.abspath(args.output_dir)
     os.makedirs(output_dir, exist_ok=True)
@@ -867,7 +897,7 @@ def main():
 
     # 生成后端代码文件
     files = {
-        "env.example.yaml": generate_env_yaml(args.name, args.lang),
+        "env.example.yaml": generate_env_yaml(args.name, args.name_en, args.lang),
         "requirements.txt": generate_requirements(),
         ".gitignore": generate_gitignore(),
         "app.py": generate_app_py(args.name),
@@ -943,7 +973,7 @@ def main():
         # 如果用户指定了自定义商城名（非默认），替换前端文件中的品牌名
         default_mall = "云尚商城"
         default_mall_en = "CloudShop Mall"
-        if args.name != default_mall:
+        if args.name != default_mall or args.name_en != default_mall_en:
             replace_targets = [
                 os.path.join(output_dir, "templates", "customer_service.html"),
                 os.path.join(output_dir, "static", "i18n.js"),
@@ -952,8 +982,10 @@ def main():
                 if os.path.exists(fpath):
                     with open(fpath, "r", encoding="utf-8") as f:
                         content = f.read()
-                    content = content.replace(default_mall, args.name)
-                    content = content.replace(default_mall_en, args.name)
+                    if args.name != default_mall:
+                        content = content.replace(default_mall, args.name)
+                    if args.name_en != default_mall_en:
+                        content = content.replace(default_mall_en, args.name_en)
                     with open(fpath, "w", encoding="utf-8") as f:
                         f.write(content)
     else:

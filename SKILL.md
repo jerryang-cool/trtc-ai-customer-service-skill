@@ -61,11 +61,12 @@ Flask 后端 (app.py)  —— 仅 UserSig 签发 + OpenAPI 中转
 运行脚手架脚本：
 
 ```bash
-python {baseDir}/scripts/scaffold.py <项目目录> [--name <商城名称>] [--lang <zh|en|both>]
+python {baseDir}/scripts/scaffold.py <项目目录> [--name <商城名称>] [--name-en <English name>] [--lang <zh|en|both>]
 ```
 
 - `{baseDir}`：本 Skill 所在目录的绝对路径（由 Agent 自动替换为实际路径）
-- `--name`：商城名称（默认"云尚商城"），会自动替换全链路品牌文案（三语 SystemPrompt、欢迎语、告别语、前端 UI）
+- `--name`：商城名称（默认"云尚商城"），用于中文/粤语的 SystemPrompt、欢迎语、告别语、前端 UI
+- `--name-en`：英文商城名称（默认自动推导：中文名时为"CloudShop Mall"，英文名时与 `--name` 相同），用于英文 SystemPrompt、英文欢迎语/告别语
 - `--lang`：语言支持范围，`zh`=仅中文、`en`=仅英文、`both`=中英粤三语（默认 `both`）
 - 脚本自动生成全部文件：后端 + 前端 + 头像 + 鉴权库 + 启动脚本，无需手动复制任何文件
 
@@ -92,7 +93,7 @@ python {baseDir}/scripts/scaffold.py <项目目录> [--name <商城名称>] [--l
 启动脚本会自动创建虚拟环境、安装依赖、启动服务。
 
 **验证标准**（告知用户逐项确认）：
-1. 终端显示 `🚀 启动 TRTC AI 智能客服` + `http://localhost:8080`
+1. 终端显示 `🚀 启动 TRTC AI 智能客服` + 访问地址（公网服务器会自动检测公网 IP 并启用 HTTPS，显示 `https://<公网IP>:8080`；本地开发则显示 `http://localhost:8080`）
 2. 浏览器打开页面 → 能看到客服头像选择界面
 3. 选择客服 → 点击"开始对话" → 听到 AI 播报欢迎语
 4. 说话或打字 → AI 能正常回复

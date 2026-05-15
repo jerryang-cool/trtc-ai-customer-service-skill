@@ -223,56 +223,88 @@ for /f "tokens=5" %%p in ('netstat -ano 2^>nul ^| findstr ":%PORT% " ^| findstr 
     )
 )
 
-:: ============ Step 6: HTTPS Self-signed Cert / HTTPS 自签证书 ============
+:: ============ Step 6: Auto-detect public network / 公网环境检测 ============
+set PUBLIC_IP=
+set AUTO_HTTPS=0
+set EXPLICIT_HTTPS=%USE_HTTPS%
+
+:: Try to detect public IP via curl
+where curl >nul 2>&1
+if not errorlevel 1 (
+    for /f "tokens=*" %%i in ('curl -s --max-time 3 https://ifconfig.me 2^>nul') do set PUBLIC_IP=%%i
+)
+
+:: Auto-enable HTTPS if public IP detected and --https was not explicitly passed
+if "%EXPLICIT_HTTPS%"=="0" if defined PUBLIC_IP (
+    echo !PUBLIC_IP! | findstr /r "^[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*$" >nul 2>&1
+    if not errorlevel 1 (
+        if not "!PUBLIC_IP!"=="127.0.0.1" (
+            if "%IS_ZH%"=="1" (echo [%TIME:~0,8%] 检测到公网 IP: !PUBLIC_IP!，自动启用 HTTPS) else (echo [%TIME:~0,8%] Public IP detected: !PUBLIC_IP!, auto-enabling HTTPS)
+            set USE_HTTPS=1
+            set AUTO_HTTPS=1
+        )
+    )
+)
+
+:: ============ Step 7: HTTPS Self-signed Cert / HTTPS 自签证书 ============
 set CERT_DIR=certs
 set CERT_FILE=%CERT_DIR%\cert.pem
 set KEY_FILE=%CERT_DIR%\key.pem
 
 if "%USE_HTTPS%"=="1" (
-    if "%IS_ZH%"=="1" (echo [%TIME:~0,8%] 检测到 --https 参数，准备 HTTPS 证书...) else (echo [%TIME:~0,8%] HTTPS mode detected, preparing certificate...)
+    if "%IS_ZH%"=="1" (echo [%TIME:~0,8%] 准备 HTTPS 证书...) else (echo [%TIME:~0,8%] Preparing HTTPS certificate...)
     if exist "%CERT_FILE%" if exist "%KEY_FILE%" (
         if "%IS_ZH%"=="1" (echo √ 已有证书: %CERT_FILE%) else (echo √ Certificate found: %CERT_FILE%)
     ) else (
         where openssl >nul 2>&1
         if errorlevel 1 (
-            if "%IS_ZH%"=="1" (
-                echo × openssl 未安装，无法生成自签证书
-                echo   Windows 安装方式:
+            if "%AUTO_HTTPS%"=="1" (
+                if "%IS_ZH%"=="1" (echo ⚠ openssl 未安装，回退到 HTTP 模式) else (echo ⚠ openssl not found, falling back to HTTP)
+                set USE_HTTPS=0
             ) else (
-                echo × openssl not installed, cannot generate self-signed cert
-                echo   Install on Windows:
+                if "%IS_ZH%"=="1" (
+                    echo × openssl 未安装，无法生成自签证书
+                    echo   Windows 安装方式:
+                ) else (
+                    echo × openssl not installed, cannot generate self-signed cert
+                    echo   Install on Windows:
+                )
+                echo     A: winget install ShiningLight.OpenSSL
+                echo     B: https://slproweb.com/products/Win32OpenSSL.html
+                pause
+                exit /b 1
             )
-            echo     A: winget install ShiningLight.OpenSSL
-            echo     B: https://slproweb.com/products/Win32OpenSSL.html
-            pause
-            exit /b 1
         )
-        if not exist "%CERT_DIR%" mkdir "%CERT_DIR%"
-        if "%IS_ZH%"=="1" (echo 生成自签证书（有效期 365 天）...) else (echo Generating self-signed certificate ^(valid 365 days^)...)
-        openssl req -x509 -newkey rsa:2048 -nodes -keyout "%KEY_FILE%" -out "%CERT_FILE%" -days 365 -subj "/CN=localhost" 2>nul
-        if "%IS_ZH%"=="1" (echo √ 证书已生成: %CERT_DIR%\) else (echo √ Certificate generated: %CERT_DIR%\)
-        echo.
-        if "%IS_ZH%"=="1" (
-            echo ⚠ 这是自签证书，浏览器首次访问会提示"不安全"
-            echo   解决方法: 点击"高级" → "继续前往"即可正常使用
-        ) else (
-            echo ⚠ This is a self-signed certificate. Your browser will show a security warning.
-            echo   Click "Advanced" → "Proceed" to continue.
+        if "%USE_HTTPS%"=="1" (
+            if not exist "%CERT_DIR%" mkdir "%CERT_DIR%"
+            if "%IS_ZH%"=="1" (echo 生成自签证书（有效期 365 天）...) else (echo Generating self-signed certificate ^(valid 365 days^)...)
+            openssl req -x509 -newkey rsa:2048 -nodes -keyout "%KEY_FILE%" -out "%CERT_FILE%" -days 365 -subj "/CN=localhost" 2>nul
+            if "%IS_ZH%"=="1" (echo √ 证书已生成: %CERT_DIR%\) else (echo √ Certificate generated: %CERT_DIR%\)
+            echo.
+            if "%IS_ZH%"=="1" (
+                echo ⚠ 这是自签证书，浏览器首次访问会提示"不安全"
+                echo   解决方法: 点击"高级" → "继续前往"即可正常使用
+            ) else (
+                echo ⚠ Self-signed certificate: browser will show a security warning.
+                echo   Click "Advanced" → "Proceed" to continue.
+            )
+            echo.
         )
-        echo.
     )
 )
 
-:: ============ Step 7: Launch / 启动 ============
+:: ============ Step 8: Launch / 启动 ============
 echo.
 echo ════════════════════════════════════════════════
 if "%IS_ZH%"=="1" (echo   🚀 启动 TRTC AI 智能客服) else (echo   🚀 Launching TRTC AI Customer Service)
 echo ════════════════════════════════════════════════
-if "%USE_HTTPS%"=="1" (
-    if "%IS_ZH%"=="1" (echo    访问: https://localhost:%PORT%) else (echo    Visit: https://localhost:%PORT%)
-    if "%IS_ZH%"=="1" (echo    远程: https://^<your-server-ip^>:%PORT%) else (echo    Remote: https://^<your-server-ip^>:%PORT%)
+set PROTO=http
+if "%USE_HTTPS%"=="1" set PROTO=https
+if defined PUBLIC_IP if not "%PUBLIC_IP%"=="127.0.0.1" (
+    if "%IS_ZH%"=="1" (echo    公网: %PROTO%://!PUBLIC_IP!:%PORT%) else (echo    Public: %PROTO%://!PUBLIC_IP!:%PORT%)
+    if "%IS_ZH%"=="1" (echo    本地: %PROTO%://localhost:%PORT%) else (echo    Local:  %PROTO%://localhost:%PORT%)
 ) else (
-    if "%IS_ZH%"=="1" (echo    访问: http://localhost:%PORT%) else (echo    Visit: http://localhost:%PORT%)
+    if "%IS_ZH%"=="1" (echo    访问: %PROTO%://localhost:%PORT%) else (echo    Visit: %PROTO%://localhost:%PORT%)
 )
 if "%IS_ZH%"=="1" (echo    停止: Ctrl+C) else (echo    Stop: Ctrl+C)
 echo ════════════════════════════════════════════════

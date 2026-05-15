@@ -361,49 +361,90 @@ if [ -n "$EXISTING_PID" ]; then
     esac
 fi
 
-# ---------------- Step 6: HTTPS Self-signed Cert / HTTPS 自签证书 ----------------
+# ---------------- Step 6: Auto-detect public network / 公网环境检测 ----------------
+# Detect public IP; if running on a cloud server, default to HTTPS
+PUBLIC_IP=""
+get_public_ip() {
+    for url in "https://ifconfig.me" "https://api.ipify.org" "https://icanhazip.com"; do
+        local ip
+        ip=$(curl -s --max-time 3 "$url" 2>/dev/null | tr -d '[:space:]')
+        if echo "$ip" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "$ip"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Get local IP for reference
+LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || ipconfig getifaddr en0 2>/dev/null || echo "127.0.0.1")
+
+# Check if --https was explicitly passed
+EXPLICIT_HTTPS=0
 USE_HTTPS=0
 for arg in "$@"; do
-    [ "$arg" = "--https" ] && USE_HTTPS=1
+    [ "$arg" = "--https" ] && { USE_HTTPS=1; EXPLICIT_HTTPS=1; }
 done
 
+# Auto-detect: if not localhost and no explicit --https/--no-https, try to detect public IP and auto-enable HTTPS
+AUTO_HTTPS=0
+if [ "$EXPLICIT_HTTPS" -eq 0 ]; then
+    PUBLIC_IP=$(get_public_ip 2>/dev/null || true)
+    if [ -n "$PUBLIC_IP" ] && [ "$PUBLIC_IP" != "127.0.0.1" ]; then
+        log "$(msg "Public IP detected: $PUBLIC_IP, auto-enabling HTTPS" "检测到公网 IP: $PUBLIC_IP，自动启用 HTTPS")"
+        USE_HTTPS=1
+        AUTO_HTTPS=1
+    fi
+fi
+
+# ---------------- Step 7: HTTPS Self-signed Cert / HTTPS 自签证书 ----------------
 CERT_DIR="certs"
 CERT_FILE="$CERT_DIR/cert.pem"
 KEY_FILE="$CERT_DIR/key.pem"
 
 if [ "$USE_HTTPS" -eq 1 ]; then
-    log "$(msg "HTTPS mode detected, preparing certificate..." "检测到 --https 参数，准备 HTTPS 证书...")"
+    log "$(msg "Preparing HTTPS certificate..." "准备 HTTPS 证书...")"
     if [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ]; then
         ok "$(msg "Certificate found: $CERT_FILE" "已有证书: $CERT_FILE")"
     else
         if ! command -v openssl >/dev/null 2>&1; then
-            die "$(msg "openssl not installed, cannot generate self-signed cert" "openssl 未安装，无法生成自签证书")"
+            if [ "$AUTO_HTTPS" -eq 1 ]; then
+                warn "$(msg "openssl not found, falling back to HTTP" "openssl 未安装，回退到 HTTP 模式")"
+                USE_HTTPS=0
+            else
+                die "$(msg "openssl not installed, cannot generate self-signed cert" "openssl 未安装，无法生成自签证书")"
+            fi
         fi
-        mkdir -p "$CERT_DIR"
-        log "$(msg "Generating self-signed certificate (valid 365 days)..." "生成自签证书（有效期 365 天）...")"
-        openssl req -x509 -newkey rsa:2048 -nodes \
-            -keyout "$KEY_FILE" -out "$CERT_FILE" \
-            -days 365 -subj "/CN=localhost" \
-            -addext "subjectAltName=DNS:localhost,IP:0.0.0.0" \
-            2>/dev/null
-        ok "$(msg "Certificate generated: $CERT_DIR/" "证书已生成: $CERT_DIR/")"
-        echo ""
-        warn "$(msg "This is a self-signed certificate. Your browser will show a security warning on first visit." "这是自签证书，浏览器首次访问会提示\"不安全\"")"
-        msg "  Click \"Advanced\" → \"Proceed\" to continue." "  解决方法: 点击\"高级\" → \"继续前往\"即可正常使用"
-        echo ""
+        if [ "$USE_HTTPS" -eq 1 ]; then
+            mkdir -p "$CERT_DIR"
+            log "$(msg "Generating self-signed certificate (valid 365 days)..." "生成自签证书（有效期 365 天）...")"
+            openssl req -x509 -newkey rsa:2048 -nodes \
+                -keyout "$KEY_FILE" -out "$CERT_FILE" \
+                -days 365 -subj "/CN=localhost" \
+                -addext "subjectAltName=DNS:localhost,IP:0.0.0.0" \
+                2>/dev/null
+            ok "$(msg "Certificate generated: $CERT_DIR/" "证书已生成: $CERT_DIR/")"
+            echo ""
+            warn "$(msg "Self-signed certificate: browser will show a security warning on first visit." "这是自签证书，浏览器首次访问会提示\"不安全\"")"
+            msg "  Click \"Advanced\" → \"Proceed\" to continue." "  解决方法: 点击\"高级\" → \"继续前往\"即可正常使用"
+            echo ""
+        fi
     fi
 fi
 
-# ---------------- Step 7: Launch / 启动 ----------------
+# ---------------- Step 8: Launch / 启动 ----------------
 echo ""
 printf "%b════════════════════════════════════════════════%b\n" "$BOLD" "$NC"
 printf "%b🚀 $(msg "Launching TRTC AI Customer Service" "启动 TRTC AI 智能客服")%b\n" "$GREEN" "$NC"
 printf "%b════════════════════════════════════════════════%b\n" "$BOLD" "$NC"
-if [ "$USE_HTTPS" -eq 1 ]; then
-    printf "   $(msg "Visit" "访问"): %b%bhttps://localhost:%s%b\n" "$CYAN" "$BOLD" "$PORT" "$NC"
-    printf "   $(msg "Remote" "远程"): %bhttps://<your-server-ip>:%s%b\n" "$CYAN" "$PORT" "$NC"
+PROTO="http"
+[ "$USE_HTTPS" -eq 1 ] && PROTO="https"
+if [ -n "$PUBLIC_IP" ] && [ "$PUBLIC_IP" != "127.0.0.1" ]; then
+    printf "   $(msg "Public" "公网"): %b%b${PROTO}://${PUBLIC_IP}:%s%b\n" "$CYAN" "$BOLD" "$PORT" "$NC"
+    printf "   $(msg "Local" "内网"):  %b${PROTO}://${LOCAL_IP}:%s%b\n" "$CYAN" "$PORT" "$NC"
+    printf "   $(msg "Local" "本地"):  %b${PROTO}://localhost:%s%b\n" "$CYAN" "$PORT" "$NC"
 else
-    printf "   $(msg "Visit" "访问"): %b%bhttp://localhost:%s%b\n" "$CYAN" "$BOLD" "$PORT" "$NC"
+    printf "   $(msg "Visit" "访问"): %b%b${PROTO}://localhost:%s%b\n" "$CYAN" "$BOLD" "$PORT" "$NC"
 fi
 printf "   $(msg "Stop" "停止"): %bCtrl+C%b\n" "$YELLOW" "$NC"
 printf "%b════════════════════════════════════════════════%b\n" "$BOLD" "$NC"
