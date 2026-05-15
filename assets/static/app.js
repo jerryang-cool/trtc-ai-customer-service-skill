@@ -49,6 +49,9 @@ const USER_CFG = {
 
 const $ = (id) => document.getElementById(id);
 
+// Avatar CDN fallback (when local avatars are missing, e.g. ClawHub install without .png)
+const AVATAR_CDN = 'https://raw.githubusercontent.com/jerryang-cool/trtc-ai-customer-service-skill/main/assets/static/avatars';
+
 // ========== DOM refs ==========
 const els = {
     sidebar: $('sidebar'),
@@ -179,10 +182,19 @@ function detectEndKeyword(text) {
 }
 
 // ========== 消息气泡渲染 ==========
+function avatarFileName(lang, gender) {
+    return `${lang === 'yue' ? 'zh' : lang}_${gender || 'female'}.png`;
+}
 function getAgentAvatarUrl() {
-    const lang = USER_CFG.lang === 'yue' ? 'zh' : USER_CFG.lang;
-    const gender = STATE.gender || 'female';
-    return `/static/avatars/${lang}_${gender}.png`;
+    return `/static/avatars/${avatarFileName(USER_CFG.lang, STATE.gender)}`;
+}
+function avatarOnError(img) {
+    // Fallback to GitHub CDN if local avatar is missing
+    const src = img.getAttribute('src') || '';
+    if (!src.startsWith(AVATAR_CDN)) {
+        const filename = src.split('/').pop();
+        img.src = `${AVATAR_CDN}/${filename}`;
+    }
 }
 
 function renderMessage(msg) {
@@ -194,7 +206,7 @@ function renderMessage(msg) {
     const isUser = msg.role === 'user';
     const avatarEl = isUser
         ? `<div class="msg-avatar">我</div>`
-        : `<div class="msg-avatar"><img src="${getAgentAvatarUrl()}" alt="agent"></div>`;
+        : `<div class="msg-avatar"><img src="${getAgentAvatarUrl()}" alt="agent" onerror="avatarOnError(this)"></div>`;
 
     // 订单卡片渲染
     if (msg.card) {
@@ -1135,7 +1147,9 @@ function bindEvents() {
 function updateAvatarImages() {
     const lang = USER_CFG.lang === 'yue' ? 'zh' : USER_CFG.lang;
     els.avatarImgFemale.src = `/static/avatars/${lang}_female.png`;
+    els.avatarImgFemale.onerror = function() { avatarOnError(this); };
     els.avatarImgMale.src = `/static/avatars/${lang}_male.png`;
+    els.avatarImgMale.onerror = function() { avatarOnError(this); };
 }
 
 // ========== i18n ==========

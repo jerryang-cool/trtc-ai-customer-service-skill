@@ -4,6 +4,13 @@ version: 1.0.0
 description: |
   Build an AI e-commerce customer service Web app with TRTC ConversationAI — voice/text dual-mode, trilingual, digital avatar optional.
   基于 Tencent RTC Conversational AI 快速构建 AI 电商客服 Web 应用 — 语音/文字双模、三语国际化、数字人可选。
+homepage: https://github.com/jerryang-cool/trtc-ai-customer-service-skill
+metadata:
+  openclaw:
+    emoji: "🛍️"
+    requires:
+      bins:
+        - python3
 ---
 
 # TRTC AI 电商客服 Skill
