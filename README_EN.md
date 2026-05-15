@@ -20,6 +20,20 @@ English | [简体中文](README.md)
 
 This is a **portable Agent Skill** (a `SKILL.md` + `scripts/` + `references/` + `assets/` bundle). Install it to your tool's skills directory and the agent will auto-discover it.
 
+### OpenClaw
+
+Choose the install location based on your needs:
+
+| Location | Scope | Command |
+|----------|-------|---------|
+| `<workspace>/skills/` | Current workspace, highest priority | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git skills/trtc-ai-customer-service` |
+| `~/.agents/skills/` | Personal, effective across workspaces | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.agents/skills/trtc-ai-customer-service` |
+| `~/.openclaw/skills/` | Global, visible to all agents | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.openclaw/skills/trtc-ai-customer-service` |
+
+Invoke via natural language ("help me build an AI customer service") or slash command `/trtc-ai-customer-service`.
+
+> See [OpenClaw Skills documentation](https://docs.openclaw.ai/tools/skills) for more details.
+
 ### CodeBuddy
 
 Settings → Skills → **Import Skill**, then point to this repository's directory. Once imported, mention keywords such as *"AI customer service"*, *"e-commerce support"*, or *"TRTC + AI"* to activate.

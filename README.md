@@ -20,6 +20,20 @@
 
 本项目是一个**便携式 Agent Skill**（包含 `SKILL.md` + `scripts/` + `references/` + `assets/` 的标准结构）。安装到对应工具的 skills 目录即可被自动发现。
 
+### OpenClaw
+
+根据需要选择安装位置：
+
+| 位置 | 作用域 | 命令 |
+|------|--------|------|
+| `<workspace>/skills/` | 当前工作区，优先级最高 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git skills/trtc-ai-customer-service` |
+| `~/.agents/skills/` | 个人级，跨工作区生效 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.agents/skills/trtc-ai-customer-service` |
+| `~/.openclaw/skills/` | 全局共享，所有 agent 可见 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.openclaw/skills/trtc-ai-customer-service` |
+
+安装后通过自然语言（如"帮我做个 AI 客服"）或斜杠命令 `/trtc-ai-customer-service` 调用。
+
+> 更多信息参见 [OpenClaw Skills 官方文档](https://docs.openclaw.ai/zh-CN/tools/skills)。
+
 ### CodeBuddy
 
 设置 → Skills → **导入 Skill**，选择本仓库目录。导入后，在对话中提及 *"AI 客服"*、*"电商客服"*、*"TRTC + AI"* 等关键词即自动激活。
