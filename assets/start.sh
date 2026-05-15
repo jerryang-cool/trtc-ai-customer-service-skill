@@ -128,7 +128,7 @@ if [ ! -f "$ENV_FILE" ]; then
 
     # --- 1/4 Cloud API Credentials / 腾讯云 API 密钥 ---
     printf "%b[1/4] $(msg "Tencent Cloud API Credentials" "腾讯云 API 密钥")%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Get from" "获取"): %bhttps://console.cloud.tencent.com/cam/capi%b\n" "$BOLD" "$NC"
+    printf "  $(msg "Get from" "获取"): %bhttps://console.intl.cloud.tencent.com/cam/capi%b\n" "$BOLD" "$NC"
     printf "  SECRET_ID : " ; read -r INPUT_SID </dev/tty 2>/dev/null || INPUT_SID=""
     printf "  SECRET_KEY: " ; read -r INPUT_SKEY </dev/tty 2>/dev/null || INPUT_SKEY=""
 
@@ -143,7 +143,7 @@ if [ ! -f "$ENV_FILE" ]; then
 
     # --- 2/4 TRTC App / TRTC 应用 ---
     printf "%b[2/4] $(msg "TRTC App Credentials" "TRTC 应用凭据")%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Get from" "获取"): %bhttps://console.cloud.tencent.com/trtc%b\n" "$BOLD" "$NC"
+    printf "  $(msg "Get from" "获取"): %bhttps://console.trtc.io/app%b\n" "$BOLD" "$NC"
     printf "  SDKAPPID: " ; read -r INPUT_APPID </dev/tty 2>/dev/null || INPUT_APPID=""
     printf "  SECRET  : " ; read -r INPUT_TSECRET </dev/tty 2>/dev/null || INPUT_TSECRET=""
 

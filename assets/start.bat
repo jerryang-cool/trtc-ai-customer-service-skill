@@ -107,11 +107,11 @@ if not exist "%ENV_FILE%" (
     echo.
     if "%IS_ZH%"=="1" (
         echo   [1/3] 腾讯云 API 密钥
-        echo         获取: https://console.cloud.tencent.com/cam/capi
+        echo         获取: https://console.intl.cloud.tencent.com/cam/capi
         echo         填入: CloudAPI.SECRET_ID / SECRET_KEY
         echo.
         echo   [2/3] TRTC 应用凭据
-        echo         获取: https://console.cloud.tencent.com/trtc
+        echo         获取: https://console.trtc.io/app
         echo         填入: TRTC.SDKAPPID / SECRET
         echo.
         echo   [3/3] LLM API Key
@@ -121,11 +121,11 @@ if not exist "%ENV_FILE%" (
         echo   填写完成后重新运行 start.bat
     ) else (
         echo   [1/3] Tencent Cloud API Credentials
-        echo         Get from: https://console.cloud.tencent.com/cam/capi
+        echo         Get from: https://console.intl.cloud.tencent.com/cam/capi
         echo         Fill in: CloudAPI.SECRET_ID / SECRET_KEY
         echo.
         echo   [2/3] TRTC App Credentials
-        echo         Get from: https://console.cloud.tencent.com/trtc
+        echo         Get from: https://console.trtc.io/app
         echo         Fill in: TRTC.SDKAPPID / SECRET
         echo.
         echo   [3/3] LLM API Key

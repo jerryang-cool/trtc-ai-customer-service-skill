@@ -109,7 +109,7 @@ CloudAPI:
   SECRET_KEY: your-secret-key
 ```
 
-用于 TRTC OpenAPI 的 TC3-HMAC-SHA256 签名。在 [腾讯云控制台 - API 密钥](https://console.cloud.tencent.com/cam/capi) 获取。
+用于 TRTC OpenAPI 的 TC3-HMAC-SHA256 签名。在 [腾讯云控制台 - API 密钥](https://console.intl.cloud.tencent.com/cam/capi) 获取。
 
 **安全提醒**：这是主账号密钥，生产环境建议使用子账号并限制权限。
 
@@ -123,7 +123,7 @@ TRTC:
   SECRET: your-trtc-secret
 ```
 
-- `SDKAPPID`：TRTC 应用 ID，在 [TRTC 控制台](https://console.cloud.tencent.com/trtc) 创建
+- `SDKAPPID`：TRTC 应用 ID，在 [TRTC 控制台](https://console.trtc.io/app) 创建
 - `SECRET`：用于生成 UserSig 的密钥
 
 ---
