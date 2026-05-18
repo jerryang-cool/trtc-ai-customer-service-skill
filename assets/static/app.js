@@ -85,6 +85,8 @@ const els = {
 
     chatArea: $('chat-area'),
     chatMessages: $('chat-messages'),
+    avatarVideoLayer: $('avatar-video-layer'),
+    avatarVideoContainer: $('avatar-video-container'),
     voicePanel: $('voice-panel'),
     textPanel: $('text-panel'),
     voiceStatus: $('voice-status'),
@@ -506,11 +508,17 @@ async function startCall() {
                 handleMessage(data, event.userId);
             } catch (e) { console.warn('parse msg failed', e); }
         });
-        // 数字人模式下拉远端视频（MVP 暂不显示视频，仅拉流防止信道空闲）
+        // 数字人模式：订阅远端视频流并渲染
         trtcClient.on(TRTC.EVENT.REMOTE_VIDEO_AVAILABLE, ({ userId, streamType }) => {
-            if (STATE.useAvatar) {
-                // 如果用户想看数字人，需在 HTML 里加 #remote_video 容器
-                console.log('remote video available:', userId);
+            if (STATE.useAvatar && userId === STATE.avatarUserId) {
+                console.log('🎬 Avatar video available:', userId, streamType);
+                trtcClient.startRemoteVideo({
+                    userId,
+                    streamType,
+                    view: 'avatar-video-container',
+                });
+                // 激活 avatar 视频层和 UI 模式
+                enterAvatarMode();
             }
         });
         // AI 机器人退房事件（StopAfterPlay 播报完成后任务自动结束，机器人退房）
@@ -781,6 +789,7 @@ async function farewellAndEnd() {
         }
     } catch (e) { console.warn('exitRoom failed', e); }
 
+    exitAvatarMode();
     STATE.callState = 'idle';
     showRatingModal();
 }
@@ -967,6 +976,8 @@ function closeRating() {
     els.ratingOverlay.classList.remove('active');
     // 回到客服选择
     els.chatArea.classList.remove('active');
+    els.chatArea.classList.remove('avatar-mode');
+    if (els.avatarVideoLayer) els.avatarVideoLayer.classList.remove('active');
     els.agentSelectArea.style.display = 'flex';
     els.btnStart.disabled = false;
     // 重置输入模式
@@ -1150,6 +1161,25 @@ function updateAvatarImages() {
     els.avatarImgFemale.onerror = function() { avatarOnError(this); };
     els.avatarImgMale.src = `/static/avatars/${lang}_male.png`;
     els.avatarImgMale.onerror = function() { avatarOnError(this); };
+}
+
+// ========== 数字人视频模式 ==========
+function enterAvatarMode() {
+    if (!els.avatarVideoLayer || !els.chatArea) return;
+    els.avatarVideoLayer.classList.add('active');
+    els.chatArea.classList.add('avatar-mode');
+    console.log('🎬 Entered avatar video mode');
+}
+
+function exitAvatarMode() {
+    if (!els.avatarVideoLayer || !els.chatArea) return;
+    els.avatarVideoLayer.classList.remove('active');
+    els.chatArea.classList.remove('avatar-mode');
+    // 停止远端视频
+    if (trtcClient && STATE.avatarUserId) {
+        try { trtcClient.stopRemoteVideo({ userId: STATE.avatarUserId }); } catch (e) {}
+    }
+    console.log('🎬 Exited avatar video mode');
 }
 
 // ========== i18n ==========
