@@ -734,8 +734,15 @@ function sendOrderCard(orderId) {
     STATE.messages.push(cardMsg);
     renderAllMessages();
 
-    // 发送纯文本给 AI（让 AI 理解订单上下文）
-    const textForAI = `[订单信息] 订单号: ${order.id}, 商品: ${name}, 价格: ${price}, 状态: ${statusText}, 下单日期: ${order.date}`;
+    // 发送纯文本给 AI（让 AI 理解订单上下文，语言与当前模式一致）
+    let textForAI;
+    if (USER_CFG.lang === 'en') {
+        textForAI = `[Order Info] Order ID: ${order.id}, Product: ${name}, Price: ${price}, Status: ${statusText}, Date: ${order.date}`;
+    } else if (USER_CFG.lang === 'yue') {
+        textForAI = `[訂單信息] 訂單號: ${order.id}, 商品: ${name}, 價格: ${price}, 狀態: ${statusText}, 落單日期: ${order.date}`;
+    } else {
+        textForAI = `[订单信息] 订单号: ${order.id}, 商品: ${name}, 价格: ${price}, 状态: ${statusText}, 下单日期: ${order.date}`;
+    }
     STATE.addedUserTexts.add(textForAI);
 
     const message = {
