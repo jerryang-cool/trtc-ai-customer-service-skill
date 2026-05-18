@@ -1,146 +1,148 @@
-# TRTC AI 电商客服 Skill
+# TRTC AI Customer Service Skill
 
-[English](README_EN.md) | 简体中文
+English | [简体中文](README_ZH.md)
 
-> 基于[Tencent RTC Conversational AI 解决方案](https://trtc.io/solutions/conversational-ai) 快速搭建生产级 AI 电商客服 Web 应用 — 语音与文字双通道、三语国际化、内置电商业务流程。
+> Rapidly scaffold a production-ready AI customer service Web application powered by [Tencent RTC Conversational AI](https://trtc.io/solutions/conversational-ai) — voice & text dual-mode, trilingual, with built-in e-commerce workflows.
 
-## 核心能力
+## Highlights
 
-| 能力 | 说明 |
-|------|------|
-| **实时语音** | 终端用户与云端 AI Bot 之间的双向 WebRTC 音频通信 |
-| **文字降级** | 跳过 ASR，将键盘输入直接送达 LLM 处理链路 |
-| **三语国际化** | 中文 / 粤语 / 英文全覆盖：UI、STT、TTS、SystemPrompt |
-| **电商业务流** | 订单查询、退换货处理、物流追踪、优惠活动咨询 |
-| **数字人可选** | 可选虚拟形象渲染，未配置时优雅降级为纯语音 |
-| **会话生命周期** | 关键词触发告别、转人工、空闲超时自动结束 |
-| **服务评分** | 会话结束后 4 维度评价 |
+| Capability | Description |
+|-----------|-------------|
+| **Real-time Voice** | Bidirectional WebRTC audio between end-user and cloud-hosted AI Bot |
+| **Text Fallback** | Bypass ASR — send typed messages directly to the LLM pipeline |
+| **Trilingual i18n** | Chinese / Cantonese / English across UI, STT, TTS, and SystemPrompt |
+| **E-commerce Workflows** | Order inquiry, returns & exchanges, shipping tracking, promotions |
+| **Digital Avatar** | Optional virtual human rendering; graceful degradation to pure voice |
+| **Session Lifecycle** | Keyword-triggered farewell, human agent transfer, auto-idle timeout |
+| **Service Rating** | 4-dimension post-session evaluation |
 
-## 安装方式
+## Installation
 
-本项目是一个**便携式 Agent Skill**（包含 `SKILL.md` + `scripts/` + `references/` + `assets/` 的标准结构）。安装到对应工具的 skills 目录即可被自动发现。
+This is a **portable Agent Skill** (a `SKILL.md` + `scripts/` + `references/` + `assets/` bundle). Install it to your tool's skills directory and the agent will auto-discover it.
 
 ### OpenClaw
 
-根据需要选择安装位置：
+Choose the install location based on your needs:
 
-| 位置 | 作用域 | 命令 |
-|------|--------|------|
-| `<workspace>/skills/` | 当前工作区，优先级最高 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git skills/trtc-ai-customer-service` |
-| `~/.agents/skills/` | 个人级，跨工作区生效 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.agents/skills/trtc-ai-customer-service` |
-| `~/.openclaw/skills/` | 全局共享，所有 agent 可见 | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.openclaw/skills/trtc-ai-customer-service` |
+| Location | Scope | Command |
+|----------|-------|---------|
+| `<workspace>/skills/` | Current workspace, highest priority | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git skills/trtc-ai-customer-service` |
+| `~/.agents/skills/` | Personal, effective across workspaces | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.agents/skills/trtc-ai-customer-service` |
+| `~/.openclaw/skills/` | Global, visible to all agents | `git clone https://github.com/jerryang-cool/trtc-ai-customer-service-skill.git ~/.openclaw/skills/trtc-ai-customer-service` |
 
-安装后通过自然语言（如"帮我做个 AI 客服"）或斜杠命令 `/trtc-ai-customer-service` 调用。
+Invoke via natural language ("help me build an AI customer service") or slash command `/trtc-ai-customer-service`.
 
-> 更多信息参见 [OpenClaw Skills 官方文档](https://docs.openclaw.ai/zh-CN/tools/skills)。
+> See [OpenClaw Skills documentation](https://docs.openclaw.ai/tools/skills) for more details.
 
 ### CodeBuddy
 
-设置 → Skills → **导入 Skill**，选择本仓库目录。导入后，在对话中提及 *"AI 客服"*、*"电商客服"*、*"TRTC + AI"* 等关键词即自动激活。
+Settings → Skills → **Import Skill**, then point to this repository's directory. Once imported, mention keywords such as *"AI customer service"*, *"e-commerce support"*, or *"TRTC + AI"* to activate.
 
 ### Claude Code
 
 ```bash
-# 用户级（跨项目可用）
+# User-level (available across all projects)
 git clone <repo-url> ~/.claude/skills/trtc-ai-customer-service
 
-# 或项目级（提交到仓库，团队共享）
+# OR project-level (commit to repo, share with team)
 git clone <repo-url> .claude/skills/trtc-ai-customer-service
 ```
 
-Claude Code 通过 `description` 字段自动匹配触发。隐式调用（如"帮我做个 AI 客服"）或显式调用 `/trtc-ai-customer-service` 均可。
+Claude Code auto-discovers skills via `description` matching. Invoke implicitly ("help me build an AI customer service") or explicitly via `/trtc-ai-customer-service`.
 
 ### OpenAI Codex CLI
 
 ```bash
-# 用户级
+# User-level
 git clone <repo-url> ~/.codex/skills/trtc-ai-customer-service
 
-# 或项目级
+# OR project-level
 git clone <repo-url> .agents/skills/trtc-ai-customer-service
 ```
 
-Codex 在下次会话启动时自动检测新 skill。隐式调用（自然语言）或显式调用 `$trtc-ai-customer-service` 均可。
+Codex auto-detects new skills on next session. Invoke implicitly via natural language, or explicitly via `$trtc-ai-customer-service`.
 
 ### Cursor
 
 ```bash
-# 投放到 Cursor skills 目录
+# Skill bundle: drop into Cursor's skills directory
 git clone <repo-url> ~/.cursor/skills/trtc-ai-customer-service
 ```
 
-仓库内 `.cursor/rules/trtc-ai-customer-service.mdc` 遵循 2026 MDC 格式（Agent Requested 模式），Cursor 的 Agent 模式会按 description 按需加载。
+The `.cursor/rules/trtc-ai-customer-service.mdc` inside this repo follows the 2026 MDC format (Agent Requested mode) — Cursor's Agent loads it on demand based on the description.
 
-> **从 `.cursorrules` 升级**：Cursor 自 2026 年起在 Agent 模式下静默忽略 `.cursorrules`。本 Skill 仅提供新的 `.cursor/rules/*.mdc` 格式。
+> **Legacy `.cursorrules` users**: Cursor silently ignores `.cursorrules` in Agent mode since 2026. This skill ships only the modern `.cursor/rules/*.mdc` format.
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 1. 生成新项目
-python scripts/scaffold.py ./my-shop --name "云尚商城" --lang both
+# 1. Generate a new project
+python scripts/scaffold.py ./my-shop --name "CloudShop" --name-en "CloudShop Mall"
 
-# 2. 启动（首次运行进入交互式密钥配置向导）
+# 2. Launch (first run enters interactive credential wizard)
 cd ./my-shop && ./start.sh
 
-# 3. 浏览器访问 http://localhost:8080
+# 3. Open http://localhost:8080
 ```
 
-## 架构
+## Architecture
 
 ```
 ┌─────────────────────────────────┐
-│  浏览器  (TRTC Web SDK v5)       │
-│  WebRTC 音频 + 自定义消息         │
+│  Browser  (TRTC Web SDK v5)     │
+│  WebRTC audio + custom messages │
 └──────────────┬──────────────────┘
                │
        ┌───────▼───────┐
-       │   TRTC 房间    │
-       │  ASR → LLM →  │  云端 AI 处理链路
-       │      TTS       │  (后端零 LLM 调用)
+       │   TRTC Room   │
+       │  ASR → LLM →  │  Cloud-hosted AI pipeline
+       │      TTS       │  (zero LLM calls on your server)
        └───────┬────────┘
                │ OpenAPI (TC3-HMAC-SHA256)
        ┌───────▼────────┐
-       │  Flask 后端     │  UserSig 签发
-       │   (app.py)      │  + OpenAPI 中转
+       │  Flask Backend  │  UserSig signing
+       │   (app.py)      │  + OpenAPI relay only
        └─────────────────┘
 ```
 
-## 技术栈
+## Tech Stack
 
-| 层 | 技术 |
-|----|------|
-| 后端 | Python 3.8+ · Flask · tencentcloud-sdk-python |
-| 前端 | 原生 JS · TRTC Web SDK v5 · CSS 自定义属性 |
-| AI 引擎 | TRTC ConversationAI（云端 ASR → LLM → TTS） |
-| 鉴权 | HMAC-SHA256 UserSig（仅服务端签发） |
-| 配置 | YAML，通过 `envyaml` 支持环境变量插值 |
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.8+ · Flask · tencentcloud-sdk-python |
+| Frontend | Vanilla JS · TRTC Web SDK v5 · CSS custom properties |
+| AI Engine | TRTC ConversationAI (cloud ASR → LLM → TTS) |
+| Auth | HMAC-SHA256 UserSig (server-side only) |
+| Config | YAML via `envyaml` with env-var interpolation |
 
-## 项目结构
+## Project Layout
 
 ```
 trtc-ai-customer-service-skill/
-├── SKILL.md              # Skill 入口 — 供 CodeBuddy / Claude Code / Codex CLI 识别
+├── SKILL.md              # Skill entry — used by CodeBuddy / Claude Code / Codex CLI
 ├── .cursor/
 │   └── rules/
-│       └── trtc-ai-customer-service.mdc  # Cursor 2026 MDC 格式
-├── LICENSE               # MIT 许可证
-├── CHANGELOG.md          # 版本历史
-├── README.md             # 中文文档（本文件）
-├── README_EN.md          # English documentation
+│       └── trtc-ai-customer-service.mdc  # Cursor 2026 MDC format
+├── LICENSE               # MIT
+├── CHANGELOG.md          # Version history
+├── README.md             # English documentation (this file)
+├── README_ZH.md          # 中文文档
 ├── scripts/
-│   └── scaffold.py       # 一键项目生成器
+│   └── scaffold.py       # One-command project generator
 ├── references/
-│   ├── architecture.md   # 系统设计与后端集成
-│   ├── config-guide.md   # 完整配置参考
-│   └── frontend-guide.md # TRTC Web SDK 集成指南
-└── assets/               # 脚手架附带的模板文件
+│   ├── architecture.md   # System design & backend integration
+│   ├── config-guide.md   # Full configuration reference
+│   └── frontend-guide.md # TRTC Web SDK integration guide
+└── assets/               # Template files shipped by scaffold
 ```
 
-## 参考链接
+## References
 
-- [Tencent RTC 控制台](https://console.trtc.io/)
-- [Conversational AI 解决方案](https://trtc.io/solutions/conversational-ai)
+- [Tencent RTC Console](https://console.trtc.io/)
+- [Conversational AI Solution](https://trtc.io/solutions/conversational-ai)
+- [LLM Configuration Guide](https://trtc.io/document/68338?product=conversationalai)
+- [TTS Voice Configuration](https://trtc.io/document/79682?product=conversationalai)
 
-## 许可证
+## License
 
-基于 [MIT 许可证](LICENSE) 发布。
+Released under the [MIT License](LICENSE).

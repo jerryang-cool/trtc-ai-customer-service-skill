@@ -126,9 +126,41 @@ if [ ! -f "$ENV_FILE" ]; then
     fi
     echo ""
 
+    # --- 0/4 Deployment Region / 部署区域选择 ---
+    printf "%b[0/4] $(msg "Deployment Region" "部署区域")%b\n" "$CYAN" "$NC"
+    if [ "$_IS_ZH" -eq 1 ]; then
+        printf "    1) 国际站 intl（默认）  2) 中国站 cn\n"
+        printf "  请选择 [1-2]: "
+    else
+        printf "    1) International (default)  2) China Mainland\n"
+        printf "  Choose [1-2]: "
+    fi
+    read -r INPUT_REGION </dev/tty 2>/dev/null || INPUT_REGION=""
+
+    DEPLOY_REGION="intl"
+    if [ "$INPUT_REGION" = "2" ]; then
+        DEPLOY_REGION="cn"
+        sed -i.bak "s|Region:.*|Region: cn   # intl / cn|" "$ENV_FILE"
+        ok "$(msg "Region set to: China Mainland (cn)" "部署区域: 中国站 (cn)")"
+    else
+        ok "$(msg "Region set to: International (intl)" "部署区域: 国际站 (intl)")"
+    fi
+    echo ""
+
+    # Set console URLs based on region
+    if [ "$DEPLOY_REGION" = "cn" ]; then
+        URL_CAM="https://console.cloud.tencent.com/cam/capi"
+        URL_TRTC="https://console.cloud.tencent.com/trtc/app"
+        URL_LLM="https://cloud.tencent.com/document/product/647/115413"
+    else
+        URL_CAM="https://console.intl.cloud.tencent.com/cam/capi"
+        URL_TRTC="https://console.trtc.io/app"
+        URL_LLM="https://trtc.io/document/68338?product=conversationalai"
+    fi
+
     # --- 1/4 Cloud API Credentials / 腾讯云 API 密钥 ---
     printf "%b[1/4] $(msg "Tencent Cloud API Credentials" "腾讯云 API 密钥")%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Get from" "获取"): %bhttps://console.intl.cloud.tencent.com/cam/capi%b\n" "$BOLD" "$NC"
+    printf "  $(msg "Get from" "获取"): %b${URL_CAM}%b\n" "$BOLD" "$NC"
     printf "  SECRET_ID : " ; read -r INPUT_SID </dev/tty 2>/dev/null || INPUT_SID=""
     printf "  SECRET_KEY: " ; read -r INPUT_SKEY </dev/tty 2>/dev/null || INPUT_SKEY=""
 
@@ -143,7 +175,7 @@ if [ ! -f "$ENV_FILE" ]; then
 
     # --- 2/4 TRTC App / TRTC 应用 ---
     printf "%b[2/4] $(msg "TRTC App Credentials" "TRTC 应用凭据")%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Get from" "获取"): %bhttps://console.trtc.io/app%b\n" "$BOLD" "$NC"
+    printf "  $(msg "Get from" "获取"): %b${URL_TRTC}%b\n" "$BOLD" "$NC"
     printf "  SDKAPPID: " ; read -r INPUT_APPID </dev/tty 2>/dev/null || INPUT_APPID=""
     printf "  SECRET  : " ; read -r INPUT_TSECRET </dev/tty 2>/dev/null || INPUT_TSECRET=""
 
@@ -158,7 +190,7 @@ if [ ! -f "$ENV_FILE" ]; then
 
     # --- 3/4 LLM API Key ---
     printf "%b[3/4] LLM API Key%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Config guide" "LLM 配置指南"): %bhttps://trtc.io/document/68338?product=conversationalai%b\n" "$BOLD" "$NC"
+    printf "  $(msg "Config guide" "LLM 配置指南"): %b${URL_LLM}%b\n" "$BOLD" "$NC"
     printf "  API Key: " ; read -r INPUT_LLM </dev/tty 2>/dev/null || INPUT_LLM=""
 
     if [ -n "$INPUT_LLM" ]; then

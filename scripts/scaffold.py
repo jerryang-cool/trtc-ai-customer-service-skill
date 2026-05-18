@@ -5,13 +5,14 @@ TRTC AI 电商客服 - 项目脚手架生成器
 
 生成一个完整的基于腾讯云 TRTC ConversationAI 的电商客服 Web 应用后端骨架，
 内置订单查询、退换货处理、商品咨询、物流追踪、优惠活动等电商客服场景。
+默认支持中文/英文/粤语三语。
 
 用法：
-    python scaffold.py <输出目录> [--name <商城名称>] [--lang <zh|en|both>]
+    python scaffold.py <输出目录> [--name <商城名称>] [--name-en <英文名>]
 
 示例：
     python scaffold.py ./my-ecommerce-service
-    python scaffold.py ./my-ecommerce-service --name "星辰商城" --lang both
+    python scaffold.py ./my-ecommerce-service --name "星辰商城" --name-en "StarMall"
 """
 import os
 import sys
@@ -19,7 +20,7 @@ import argparse
 import textwrap
 
 
-def generate_env_yaml(mall_name: str, mall_name_en: str, lang: str) -> str:
+def generate_env_yaml(mall_name: str, mall_name_en: str) -> str:
     return textwrap.dedent(f"""\
 # =====================================================================
 # {mall_name} AI 电商客服 - 配置文件
@@ -874,8 +875,6 @@ def main():
     parser.add_argument("--name", default="云尚商城", help="商城名称（默认: 云尚商城）")
     parser.add_argument("--name-en", default=None, dest="name_en",
                         help="English store name (default: auto-derived from --name, e.g. 'CloudShop Mall')")
-    parser.add_argument("--lang", default="both", choices=["zh", "en", "both"],
-                        help="支持的语言（默认: both）")
     args = parser.parse_args()
 
     # Derive English name: use --name-en if provided, otherwise use --name as-is
@@ -897,7 +896,7 @@ def main():
 
     # 生成后端代码文件
     files = {
-        "env.example.yaml": generate_env_yaml(args.name, args.name_en, args.lang),
+        "env.example.yaml": generate_env_yaml(args.name, args.name_en),
         "requirements.txt": generate_requirements(),
         ".gitignore": generate_gitignore(),
         "app.py": generate_app_py(args.name),

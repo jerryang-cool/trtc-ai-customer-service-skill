@@ -96,44 +96,87 @@ if not exist "%ENV_FILE%" (
         echo ║          首次配置 - 请编辑 env.yaml              ║
         echo ╚══════════════════════════════════════════════════╝
         echo.
-        echo   请用文本编辑器打开 %ENV_FILE% 填入以下密钥：
+        echo   请选择部署区域:
+        echo     1^) 国际站 intl（默认）  2^) 中国站 cn
     ) else (
         echo ╔══════════════════════════════════════════════════╗
         echo ║       First-time Setup - Edit env.yaml          ║
         echo ╚══════════════════════════════════════════════════╝
         echo.
-        echo   Open %ENV_FILE% with a text editor and fill in:
+        echo   Choose deployment region:
+        echo     1^) International ^(default^)  2^) China Mainland
+    )
+    set /p REGION_CHOICE="  [1-2]: "
+    set DEPLOY_REGION=intl
+    if "!REGION_CHOICE!"=="2" set DEPLOY_REGION=cn
+    echo.
+    if "%DEPLOY_REGION%"=="cn" (
+        if "%IS_ZH%"=="1" (echo √ 部署区域: 中国站 ^(cn^)) else (echo √ Region: China Mainland ^(cn^))
+        echo.
+        if "%IS_ZH%"=="1" (
+            echo   请用文本编辑器打开 %ENV_FILE% 填入以下密钥：
+            echo.
+            echo   [1/3] 腾讯云 API 密钥
+            echo         获取: https://console.cloud.tencent.com/cam/capi
+            echo         填入: CloudAPI.SECRET_ID / SECRET_KEY
+            echo.
+            echo   [2/3] TRTC 应用凭据
+            echo         获取: https://console.cloud.tencent.com/trtc/app
+            echo         填入: TRTC.SDKAPPID / SECRET
+            echo.
+            echo   [3/3] LLM API Key
+            echo         配置指南: https://cloud.tencent.com/document/product/647/115413
+            echo         填入: LLMConfig.APIKey / APIUrl / Model
+        ) else (
+            echo   Open %ENV_FILE% with a text editor and fill in:
+            echo.
+            echo   [1/3] Tencent Cloud API Credentials
+            echo         Get from: https://console.cloud.tencent.com/cam/capi
+            echo         Fill in: CloudAPI.SECRET_ID / SECRET_KEY
+            echo.
+            echo   [2/3] TRTC App Credentials
+            echo         Get from: https://console.cloud.tencent.com/trtc/app
+            echo         Fill in: TRTC.SDKAPPID / SECRET
+            echo.
+            echo   [3/3] LLM API Key
+            echo         Config guide: https://cloud.tencent.com/document/product/647/115413
+            echo         Fill in: LLMConfig.APIKey / APIUrl / Model
+        )
+    ) else (
+        if "%IS_ZH%"=="1" (echo √ 部署区域: 国际站 ^(intl^)) else (echo √ Region: International ^(intl^))
+        echo.
+        if "%IS_ZH%"=="1" (
+            echo   请用文本编辑器打开 %ENV_FILE% 填入以下密钥：
+            echo.
+            echo   [1/3] 腾讯云 API 密钥
+            echo         获取: https://console.intl.cloud.tencent.com/cam/capi
+            echo         填入: CloudAPI.SECRET_ID / SECRET_KEY
+            echo.
+            echo   [2/3] TRTC 应用凭据
+            echo         获取: https://console.trtc.io/app
+            echo         填入: TRTC.SDKAPPID / SECRET
+            echo.
+            echo   [3/3] LLM API Key
+            echo         配置指南: https://trtc.io/document/68338?product=conversationalai
+            echo         填入: LLMConfig.APIKey / APIUrl / Model
+        ) else (
+            echo   Open %ENV_FILE% with a text editor and fill in:
+            echo.
+            echo   [1/3] Tencent Cloud API Credentials
+            echo         Get from: https://console.intl.cloud.tencent.com/cam/capi
+            echo         Fill in: CloudAPI.SECRET_ID / SECRET_KEY
+            echo.
+            echo   [2/3] TRTC App Credentials
+            echo         Get from: https://console.trtc.io/app
+            echo         Fill in: TRTC.SDKAPPID / SECRET
+            echo.
+            echo   [3/3] LLM API Key
+            echo         Config guide: https://trtc.io/document/68338?product=conversationalai
+            echo         Fill in: LLMConfig.APIKey / APIUrl / Model
+        )
     )
     echo.
-    if "%IS_ZH%"=="1" (
-        echo   [1/3] 腾讯云 API 密钥
-        echo         获取: https://console.intl.cloud.tencent.com/cam/capi
-        echo         填入: CloudAPI.SECRET_ID / SECRET_KEY
-        echo.
-        echo   [2/3] TRTC 应用凭据
-        echo         获取: https://console.trtc.io/app
-        echo         填入: TRTC.SDKAPPID / SECRET
-        echo.
-        echo   [3/3] LLM API Key
-        echo         配置指南: https://trtc.io/document/68338?product=conversationalai
-        echo         填入: LLMConfig.APIKey / APIUrl / Model
-        echo.
-        echo   填写完成后重新运行 start.bat
-    ) else (
-        echo   [1/3] Tencent Cloud API Credentials
-        echo         Get from: https://console.intl.cloud.tencent.com/cam/capi
-        echo         Fill in: CloudAPI.SECRET_ID / SECRET_KEY
-        echo.
-        echo   [2/3] TRTC App Credentials
-        echo         Get from: https://console.trtc.io/app
-        echo         Fill in: TRTC.SDKAPPID / SECRET
-        echo.
-        echo   [3/3] LLM API Key
-        echo         Config guide: https://trtc.io/document/68338?product=conversationalai
-        echo         Fill in: LLMConfig.APIKey / APIUrl / Model
-        echo.
-        echo   Re-run start.bat after filling in credentials
-    )
+    if "%IS_ZH%"=="1" (echo   填写完成后重新运行 start.bat) else (echo   Re-run start.bat after filling in credentials)
     echo.
     pause
     exit /b 0

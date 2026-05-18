@@ -109,7 +109,7 @@ CloudAPI:
   SECRET_KEY: your-secret-key
 ```
 
-用于 TRTC OpenAPI 的 TC3-HMAC-SHA256 签名。在 [腾讯云控制台 - API 密钥](https://console.intl.cloud.tencent.com/cam/capi) 获取。
+用于 TRTC OpenAPI 的 TC3-HMAC-SHA256 签名。在腾讯云控制台获取（[国际站](https://console.intl.cloud.tencent.com/cam/capi) | [中国站](https://console.cloud.tencent.com/cam/capi)）。
 
 **安全提醒**：这是主账号密钥，生产环境建议使用子账号并限制权限。
 
@@ -123,7 +123,7 @@ TRTC:
   SECRET: your-trtc-secret
 ```
 
-- `SDKAPPID`：TRTC 应用 ID，在 [TRTC 控制台](https://console.trtc.io/app) 创建
+- `SDKAPPID`：TRTC 应用 ID，在 TRTC 控制台创建（[国际站](https://console.trtc.io/app) | [中国站](https://console.cloud.tencent.com/trtc/app)）
 - `SECRET`：用于生成 UserSig 的密钥
 
 ---
@@ -151,7 +151,7 @@ LLMConfig:
 
 ### 支持的 LLM 提供商
 
-任何兼容 OpenAI 协议的 LLM 均可使用，详见 [官方 LLM 配置指南](https://trtc.io/document/68338?product=conversationalai)：
+任何兼容 OpenAI 协议的 LLM 均可使用，详见官方 LLM 配置指南（[国际站](https://trtc.io/document/68338?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115413)）：
 - OpenAI / Azure OpenAI
 - DeepSeek
 - 通义千问
@@ -258,7 +258,7 @@ TransferMessage:
 
 TTS 引擎：`flow` 类型 + `flow_01_turbo` 模型（延迟最低）。
 
-> 如需自定义 TTS 音色（更换声线、调整语速语调等），请参考 [官方 TTS 音色配置指南](https://trtc.io/document/79682?product=conversationalai)。
+> 如需自定义 TTS 音色（更换声线、调整语速语调等），请参考官方 TTS 音色配置指南（[国际站](https://trtc.io/document/79682?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115414)）。
 
 ---
 
