@@ -1,6 +1,6 @@
 ---
 name: trtc-ai-customer-service
-version: 1.2.0
+version: 1.2.1
 description: |
   Build an AI e-commerce customer service Web app with TRTC ConversationAI — real-time voice/text dual-mode, trilingual (Chinese/English/Cantonese), digital avatar optional. Covers order inquiry, returns, shipping tracking, and promotions.
   基于腾讯云 TRTC Conversational AI 快速构建 AI 电商客服 Web 应用 — 实时语音/文字双模、中英粤三语、数字人可选。覆盖订单查询、退换货、物流追踪、商品咨询等场景。

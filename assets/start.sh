@@ -287,6 +287,47 @@ if en_insert:
 with open('env.yaml', 'w') as f:
     f.write(content)
 " "$CAT_TEXT" "$CAT_DUTY" "$TONE_TEXT" 2>/dev/null && ok "$(msg "AI role customized - trilingual sync (${CAT_TEXT:-default}${TONE_TEXT:+ / }${TONE_TEXT:-})" "AI 客服角色已定制 - 三语同步（${CAT_TEXT:-默认}${TONE_TEXT:+ / }${TONE_TEXT:-}）")" || warn "$(msg "Customization failed, please edit SystemPrompt manually" "定制写入失败，请手动编辑 SystemPrompt")"
+
+        # Generate mock orders matching the selected category
+        if [ -n "$CAT_TEXT" ] && [ "$CAT_TEXT" != "" ]; then
+            "$PY_CMD" -c "
+import json, sys
+cat = sys.argv[1]
+ORDERS = {
+    '数码产品': [
+        {'id':'CS20260510001','name':{'zh':'无线降噪耳机 Pro','yue':'無線降噪耳機 Pro','en':'Wireless ANC Headphones Pro'},'price':{'zh':'¥699','yue':'HK\$759','en':'\$96'},'status':'shipped','date':'2026-05-10','emoji':'🎧'},
+        {'id':'CS20260508002','name':{'zh':'轻薄笔记本电脑 14寸','yue':'輕薄筆記本電腦 14吋','en':'Ultra-slim Laptop 14\"'},'price':{'zh':'¥5,299','yue':'HK\$5,749','en':'\$729'},'status':'delivered','date':'2026-05-08','emoji':'💻'},
+        {'id':'CS20260507003','name':{'zh':'智能手表 S9','yue':'智能手錶 S9','en':'Smart Watch S9'},'price':{'zh':'¥1,299','yue':'HK\$1,409','en':'\$179'},'status':'pending','date':'2026-05-07','emoji':'⌚'},
+        {'id':'CS20260505004','name':{'zh':'机械键盘 RGB','yue':'機械鍵盤 RGB','en':'Mechanical Keyboard RGB'},'price':{'zh':'¥499','yue':'HK\$541','en':'\$69'},'status':'refunding','date':'2026-05-05','emoji':'⌨️'},
+        {'id':'CS20260501005','name':{'zh':'蓝牙音箱 mini','yue':'藍牙音箱 mini','en':'Bluetooth Speaker Mini'},'price':{'zh':'¥199','yue':'HK\$216','en':'\$28'},'status':'delivered','date':'2026-05-01','emoji':'🔊'},
+    ],
+    '服装鞋帽': [
+        {'id':'CS20260510001','name':{'zh':'轻奢羊绒大衣','yue':'輕奢羊絨大衣','en':'Luxury Cashmere Coat'},'price':{'zh':'¥2,399','yue':'HK\$2,603','en':'\$329'},'status':'shipped','date':'2026-05-10','emoji':'🧥'},
+        {'id':'CS20260508002','name':{'zh':'运动跑鞋 Air Max','yue':'運動跑鞋 Air Max','en':'Running Shoes Air Max'},'price':{'zh':'¥899','yue':'HK\$976','en':'\$124'},'status':'delivered','date':'2026-05-08','emoji':'👟'},
+        {'id':'CS20260507003','name':{'zh':'真丝连衣裙','yue':'真絲連衣裙','en':'Silk Dress'},'price':{'zh':'¥599','yue':'HK\$650','en':'\$82'},'status':'pending','date':'2026-05-07','emoji':'👗'},
+        {'id':'CS20260505004','name':{'zh':'男士休闲西裤','yue':'男士休閒西褲','en':'Men Casual Trousers'},'price':{'zh':'¥349','yue':'HK\$379','en':'\$48'},'status':'refunding','date':'2026-05-05','emoji':'👖'},
+        {'id':'CS20260501005','name':{'zh':'纯棉T恤 3件装','yue':'純棉T恤 3件裝','en':'Cotton T-shirt 3-Pack'},'price':{'zh':'¥129','yue':'HK\$140','en':'\$18'},'status':'delivered','date':'2026-05-01','emoji':'👕'},
+    ],
+    '食品生鲜': [
+        {'id':'CS20260510001','name':{'zh':'有机草莓 2斤装','yue':'有機草莓 2斤裝','en':'Organic Strawberries 1kg'},'price':{'zh':'¥59','yue':'HK\$64','en':'\$8'},'status':'shipped','date':'2026-05-10','emoji':'🍓'},
+        {'id':'CS20260508002','name':{'zh':'澳洲和牛 M7 眼肉','yue':'澳洲和牛 M7 眼肉','en':'Wagyu Ribeye M7'},'price':{'zh':'¥399','yue':'HK\$433','en':'\$55'},'status':'delivered','date':'2026-05-08','emoji':'🥩'},
+        {'id':'CS20260507003','name':{'zh':'智利车厘子 2kg','yue':'智利車厘子 2kg','en':'Chilean Cherries 2kg'},'price':{'zh':'¥168','yue':'HK\$182','en':'\$23'},'status':'pending','date':'2026-05-07','emoji':'🍒'},
+        {'id':'CS20260505004','name':{'zh':'挪威三文鱼刺身','yue':'挪威三文魚刺身','en':'Norwegian Salmon Sashimi'},'price':{'zh':'¥129','yue':'HK\$140','en':'\$18'},'status':'refunding','date':'2026-05-05','emoji':'🍣'},
+        {'id':'CS20260501005','name':{'zh':'进口全脂牛奶 12盒','yue':'進口全脂牛奶 12盒','en':'Whole Milk 12-Pack'},'price':{'zh':'¥89','yue':'HK\$97','en':'\$12'},'status':'delivered','date':'2026-05-01','emoji':'🥛'},
+    ],
+    '家居百货': [
+        {'id':'CS20260510001','name':{'zh':'智能扫地机器人','yue':'智能掃地機械人','en':'Robot Vacuum Cleaner'},'price':{'zh':'¥1,899','yue':'HK\$2,061','en':'\$261'},'status':'shipped','date':'2026-05-10','emoji':'🤖'},
+        {'id':'CS20260508002','name':{'zh':'乳胶记忆枕头','yue':'乳膠記憶枕頭','en':'Memory Foam Pillow'},'price':{'zh':'¥299','yue':'HK\$325','en':'\$41'},'status':'delivered','date':'2026-05-08','emoji':'🛏️'},
+        {'id':'CS20260507003','name':{'zh':'北欧风落地灯','yue':'北歐風落地燈','en':'Nordic Floor Lamp'},'price':{'zh':'¥459','yue':'HK\$498','en':'\$63'},'status':'pending','date':'2026-05-07','emoji':'💡'},
+        {'id':'CS20260505004','name':{'zh':'不锈钢保温杯 500ml','yue':'不銹鋼保溫杯 500ml','en':'Insulated Bottle 500ml'},'price':{'zh':'¥89','yue':'HK\$97','en':'\$12'},'status':'refunding','date':'2026-05-05','emoji':'🫗'},
+        {'id':'CS20260501005','name':{'zh':'竹纤维浴巾套装','yue':'竹纖維浴巾套裝','en':'Bamboo Towel Set'},'price':{'zh':'¥149','yue':'HK\$162','en':'\$20'},'status':'delivered','date':'2026-05-01','emoji':'🛁'},
+    ],
+}
+if cat in ORDERS:
+    with open('static/mock-orders.json', 'w', encoding='utf-8') as f:
+        json.dump(ORDERS[cat], f, ensure_ascii=False, indent=4)
+" "$CAT_TEXT" 2>/dev/null && ok "$(msg "Mock orders updated for: ${CAT_TEXT}" "订单数据已更新为: ${CAT_TEXT}")" || true
+        fi
     else
         ok "$(msg "Using default e-commerce assistant role" "使用默认电商客服角色")"
     fi
