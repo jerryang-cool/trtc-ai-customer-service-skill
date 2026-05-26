@@ -1,6 +1,6 @@
 ---
 name: trtc-ai-customer-service
-version: 1.2.3
+version: 1.2.4
 description: |
   Build an AI e-commerce customer service Web app with TRTC ConversationAI — real-time voice/text dual-mode, trilingual (Chinese/English/Cantonese), digital avatar optional. Covers order inquiry, returns, shipping tracking, and promotions.
   基于腾讯云 TRTC Conversational AI 快速构建 AI 电商客服 Web 应用 — 实时语音/文字双模、中英粤三语、数字人可选。覆盖订单查询、退换货、物流追踪、商品咨询等场景。
@@ -20,20 +20,18 @@ metadata:
 
 ## 触发条件
 
-当用户提到以下任何场景时使用此 Skill（EN or CN）：
-- "AI customer service" "smart customer support" "voice bot" "voice agent" "chat bot"
-- "e-commerce support" "online store assistant" "shopping assistant" "after-sales service"
-- "build a customer service app" "customer service demo" "support chatbot"
-- "real-time voice chat" "voice-to-text conversation" "ASR + LLM + TTS"
-- "TRTC conversation" "ConversationAI" "TRTC + AI" "TRTC + LLM"
-- "digital human" "virtual agent" "avatar customer service"
-- "StartAIConversation" "StopAIConversation" "ControlAIConversation"
-- "order inquiry" "returns and exchanges" "shipping tracking" "product consultation"
-- "AI 客服" "智能客服" "语音客服" "电商客服" "商城客服" "售后客服"
-- "做一个客服系统" "搭建客服" "客服机器人" "数字人客服"
-- "订单查询" "退换货" "物流追踪" "商品咨询"
+当用户**表达构建/搭建/集成意图**时使用此 Skill：
+- "做一个 AI 客服" "搭建电商客服" "帮我做个智能客服系统" "语音客服 demo"
+- "build an AI customer service" "e-commerce customer service app"
+- "TRTC ConversationAI" "TRTC + AI 客服" "TRTC e-commerce support"
+- "StartAIConversation" "StopAIConversation" "ControlAIConversation"（TRTC API 名称）
+- "数字人客服" "avatar customer service"
+- "实时语音 AI 对话" "ASR + LLM + TTS 客服"
 
-即使用户只是简单说 "help me build an AI customer service" 或 "帮我做个 AI 客服" 也应触发。
+**不应触发的场景**：
+- 用户仅在讨论客服概念，没有构建/开发意图
+- 用户询问通用 chat bot 方案，不需要语音能力或电商场景
+- 关键词如 "voice bot" "chat bot" 单独出现且无构建上下文
 
 ## 架构总览
 

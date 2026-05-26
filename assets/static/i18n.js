@@ -103,7 +103,7 @@
             orderStatus_refunding: '退款中',
             btnTransfer: '转人工',
             transferTitle: '转接人工客服',
-            transferDesc: '已加入人工客服排队，预计等待 2-5 分钟，请耐心等候。',
+            transferDesc: '已加入人工客服排队（演示模式，生产环境请对接客服路由系统）。',
             transferBtnBack: '返回首页',
         },
         en: {
@@ -198,7 +198,7 @@
             orderStatus_refunding: 'Refunding',
             btnTransfer: 'Agent',
             transferTitle: 'Transfer to Human Agent',
-            transferDesc: 'You have been added to the queue. Estimated wait time: 2-5 minutes.',
+            transferDesc: 'Added to queue (demo mode — connect to your agent routing system in production).',
             transferBtnBack: 'Back to Home',
         },
         yue: {
@@ -291,7 +291,7 @@
             orderStatus_refunding: '退款中',
             btnTransfer: '轉人工',
             transferTitle: '轉接人工客服',
-            transferDesc: '已加入人工客服排隊，預計等待 2-5 分鐘，請耐心等候。',
+            transferDesc: '已加入人工客服排隊（演示模式，生產環境請對接客服路由系統）。',
             transferBtnBack: '返回首頁',
         },
     };

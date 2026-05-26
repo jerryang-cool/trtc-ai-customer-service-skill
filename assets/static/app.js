@@ -603,7 +603,7 @@ async function startCall() {
     }
 }
 
-// ========== 转人工流程 ==========
+// ========== 转人工流程（模拟演示，实际生产中需对接真实排队/路由系统） ==========
 async function triggerTransfer() {
     if (STATE.callState !== 'active') return;
     STATE.callState = 'transferring';

@@ -149,6 +149,11 @@ LLMConfig:
 
 **重要**：LLM 由 TRTC 云端 AI Bot 调用，不是本项目后端调用。配置会通过 `StartAIConversation` API 传递给 TRTC 服务端。
 
+> ⚠️ **数据隐私提示**：您的 LLM 配置（包括 APIKey、APIUrl、SystemPrompt）以及用户对话内容将通过 TRTC 云端服务转发给 LLM 提供商。请确保：
+> 1. 了解所选 LLM 提供商的数据处理政策
+> 2. 不要在 SystemPrompt 中包含敏感的业务数据
+> 3. 在生产环境中评估是否需要数据脱敏措施
+
 ### 支持的 LLM 提供商
 
 任何兼容 OpenAI 协议的 LLM 均可使用，详见官方 LLM 配置指南（[国际站](https://trtc.io/document/68338?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115413)）：

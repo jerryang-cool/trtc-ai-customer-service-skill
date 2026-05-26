@@ -120,9 +120,15 @@ if [ ! -f "$ENV_FILE" ]; then
     if [ "$_IS_ZH" -eq 1 ]; then
         echo "  需要准备 3 组密钥 + 1 项业务配置（约 5 分钟）。"
         echo "  每步都可以按 Enter 跳过，稍后手动编辑 ${ENV_FILE}。"
+        echo ""
+        echo "  ⚠ 注意：密钥将以明文存储在 ${ENV_FILE} 中，"
+        echo "    请勿提交到版本控制，建议设置 chmod 600 ${ENV_FILE}。"
     else
         echo "  You'll need 3 sets of credentials + 1 business config (~5 min)."
         echo "  Press Enter at any step to skip, then edit ${ENV_FILE} manually."
+        echo ""
+        echo "  ⚠ Note: Credentials are stored in plaintext in ${ENV_FILE}."
+        echo "    Do not commit to version control. Consider: chmod 600 ${ENV_FILE}"
     fi
     echo ""
 
@@ -358,6 +364,8 @@ if cat in ORDERS:
         exit 0
     fi
     ok "$(msg "All credentials configured!" "所有密钥已配置完成！")"
+    # Restrict file permissions (owner-only read/write)
+    chmod 600 "$ENV_FILE" 2>/dev/null || true
     echo ""
 fi
 ok "$(msg "${ENV_FILE} exists" "${ENV_FILE} 已存在")"
@@ -429,10 +437,14 @@ fi
 
 if [ -n "$EXISTING_PID" ]; then
     EXISTING_CMD=$(ps -p "$EXISTING_PID" -o comm= 2>/dev/null || echo "unknown")
+    EXISTING_ARGS=$(ps -p "$EXISTING_PID" -o args= 2>/dev/null || echo "")
     warn "$(msg "Port ${PORT} is in use (PID: ${EXISTING_PID}, process: ${EXISTING_CMD})" "端口 ${PORT} 已被占用 (PID: ${EXISTING_PID}, 进程: ${EXISTING_CMD})")"
-    printf "  $(msg "Kill the process and continue? [Y/n]" "是否终止该进程并继续启动？[Y/n]") "
-    read -r REPLY </dev/tty 2>/dev/null || REPLY="y"
-    REPLY=${REPLY:-y}
+    if [ -n "$EXISTING_ARGS" ]; then
+        printf "  $(msg "Command" "命令"): %s\n" "$EXISTING_ARGS"
+    fi
+    printf "  $(msg "Kill this process and continue? [y/N]" "是否终止该进程并继续启动？[y/N]") "
+    read -r REPLY </dev/tty 2>/dev/null || REPLY="n"
+    REPLY=${REPLY:-n}
     case "$REPLY" in
         [Yy]*)
             kill "$EXISTING_PID" 2>/dev/null || true
@@ -450,7 +462,9 @@ if [ -n "$EXISTING_PID" ]; then
 fi
 
 # ---------------- Step 6: Auto-detect public network / 公网环境检测 ----------------
-# Detect public IP; if running on a cloud server, default to HTTPS
+# Detect public IP via external services (ifconfig.me, api.ipify.org, icanhazip.com)
+# to determine if HTTPS should be auto-enabled for WebRTC microphone access.
+log "$(msg "Detecting public network (querying ifconfig.me)..." "检测公网环境（查询 ifconfig.me）...")"
 PUBLIC_IP=""
 get_public_ip() {
     for url in "https://ifconfig.me" "https://api.ipify.org" "https://icanhazip.com"; do
