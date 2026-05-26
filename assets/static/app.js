@@ -472,7 +472,15 @@ async function startCall() {
     STATE.aiRoundLast = {};
     STATE.aiRoundMsgId = {};
     STATE.typingMsgId = null;
+    STATE.muted = false;
+    STATE.localMuted = false;
     renderAllMessages();
+
+    // 重置麦克风/静音按钮 UI
+    const btnMuteEl = $('btn-mute');
+    if (btnMuteEl) { btnMuteEl.classList.remove('muted'); btnMuteEl.title = I18N.t('btnMute'); }
+    const micBtnEl = $('mic-btn');
+    if (micBtnEl) micBtnEl.classList.remove('muted');
 
     STATE.userId = randomId(6);
     STATE.roomId = Math.floor(Math.random() * 90000) + 10000;
@@ -989,6 +997,13 @@ function closeRating() {
     els.btnStart.disabled = false;
     // 重置输入模式
     switchInputMode('voice');
+    // 重置麦克风/静音状态
+    STATE.muted = false;
+    STATE.localMuted = false;
+    const btnMuteEl = $('btn-mute');
+    if (btnMuteEl) { btnMuteEl.classList.remove('muted'); btnMuteEl.title = I18N.t('btnMute'); }
+    const micBtnEl = $('mic-btn');
+    if (micBtnEl) micBtnEl.classList.remove('muted');
 }
 
 // ========== 静音切换 ==========
@@ -1137,6 +1152,16 @@ function bindEvents() {
         applyI18n();
         // 同步头像图（语言影响欧美/亚洲脸）
         updateAvatarImages();
+        // 对话中切换语言 → 更新订单列表 + 聊天头像 + 调用 UpdateAIConversation
+        if (STATE.callState === 'active' && STATE.taskId) {
+            // 重新渲染消息（更新聊天中的客服头像）
+            renderAllMessages();
+            // 刷新订单面板（如果打开中）
+            const orderPanel = $('order-panel');
+            if (orderPanel && orderPanel.classList.contains('active')) renderOrderList();
+            // 调用后端更新 AI 对话配置（TTSConfig + LLMConfig + STTConfig）
+            updateAIForLangSwitch();
+        }
     });
 
     // 语言下拉框交互
@@ -1168,6 +1193,25 @@ function updateAvatarImages() {
     els.avatarImgFemale.onerror = function() { avatarOnError(this); };
     els.avatarImgMale.src = `/static/avatars/${lang}_male.png`;
     els.avatarImgMale.onerror = function() { avatarOnError(this); };
+}
+
+// ========== 对话中切换语言 → 更新 AI 配置 ==========
+async function updateAIForLangSwitch() {
+    if (!STATE.taskId || STATE.callState !== 'active') return;
+    try {
+        const rsp = await postAction('UpdateAIConversation', {
+            TaskId: STATE.taskId,
+            Lang: USER_CFG.lang,
+            Gender: STATE.gender,
+        });
+        if (rsp.Response?.Error) {
+            console.warn('UpdateAIConversation failed:', rsp.Response.Error.Message);
+        } else {
+            console.log('🔄 AI config updated for lang:', USER_CFG.lang);
+        }
+    } catch (e) {
+        console.warn('UpdateAIConversation error:', e);
+    }
 }
 
 // ========== 数字人视频模式 ==========

@@ -239,6 +239,7 @@ ACTION_LIST = {{
     "join",
     "StartAIConversation",
     "StopAIConversation",
+    "UpdateAIConversation",
     "FarewellAndStop",
     "TransferAndStop",
 }}
@@ -376,6 +377,50 @@ def handle_stop_ai_conversation(body: dict) -> dict:
         raise
 
 
+def handle_update_ai_conversation(body: dict) -> dict:
+    """对话中切换语言 → 动态更新 TTSConfig + LLMConfig"""
+    task_id = body["TaskId"]
+    lang = body.get("Lang", "zh")
+    gender = body.get("Gender", "female")
+
+    # 构建新的 TTS 配置（切换语言对应的音色）
+    tts_cfg = {{
+        "TTSType": "flow",
+        "Model": "flow_01_turbo",
+        "VoiceId": get_voice_id(lang, gender),
+        "Language": lang if lang in ("zh", "yue", "en") else "zh",
+        "Speed": 1.0,
+        "Volume": 1.0,
+        "Pitch": 0,
+    }}
+
+    # 构建新的 LLM 配置（切换语言对应的 SystemPrompt）
+    llm_cfg = config.llm_config(lang)
+
+    params = {{
+        "TaskId": task_id,
+        "TTSConfig": json.dumps(tts_cfg, ensure_ascii=False),
+        "LLMConfig": json.dumps(llm_cfg, ensure_ascii=False),
+    }}
+
+    loguru.logger.info(
+        f"UpdateAIConversation: TaskId={{task_id}}, lang={{lang}}, gender={{gender}}, "
+        f"voice={{get_voice_id(lang, gender)}}"
+    )
+
+    req = models.UpdateAIConversationRequest()
+    req.from_json_string(json.dumps(params, ensure_ascii=False))
+    try:
+        resp = trtc_api.UpdateAIConversation(req)
+        result = json.loads(resp.to_json_string())
+        loguru.logger.info(f"UpdateAIConversation ok: TaskId={{task_id}}")
+        return result
+    except Exception as e:
+        if "TaskNotExist" in str(e):
+            return {{"RequestId": "N/A", "message": "Task already ended"}}
+        raise
+
+
 def handle_farewell_and_stop(body: dict) -> dict:
     """推送告别语 + StopAfterPlay=true 一站式结束"""
     task_id = body["TaskId"]
@@ -461,6 +506,8 @@ def actions():
             return handle_start_ai_conversation(body)
         if action == "StopAIConversation":
             return handle_stop_ai_conversation(body)
+        if action == "UpdateAIConversation":
+            return handle_update_ai_conversation(body)
         if action == "FarewellAndStop":
             return handle_farewell_and_stop(body)
         if action == "TransferAndStop":
