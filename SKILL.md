@@ -1,6 +1,6 @@
 ---
 name: trtc-ai-customer-service
-version: 1.2.2
+version: 1.2.3
 description: |
   Build an AI e-commerce customer service Web app with TRTC ConversationAI — real-time voice/text dual-mode, trilingual (Chinese/English/Cantonese), digital avatar optional. Covers order inquiry, returns, shipping tracking, and promotions.
   基于腾讯云 TRTC Conversational AI 快速构建 AI 电商客服 Web 应用 — 实时语音/文字双模、中英粤三语、数字人可选。覆盖订单查询、退换货、物流追踪、商品咨询等场景。
@@ -86,12 +86,14 @@ python {baseDir}/scripts/scaffold.py <项目目录> [--name <商城名称>] [--n
 - [0/4] 选择部署区域（默认 `intl` 国际站，可选 `cn` 中国站）— 后续步骤会根据所选区域展示对应的控制台链接
 - [1/4] 腾讯云 API 密钥 → 脚本会展示对应区域的 [CAM 控制台](https://console.intl.cloud.tencent.com/cam/capi) 链接
 - [2/4] TRTC 应用凭据 → 脚本会展示对应区域的 [TRTC 控制台](https://console.trtc.io/app) 链接
-- [3/4] LLM 配置 → 根据所选 LLM 服务商填入：
-  - `LLMConfig.LLMType`：协议类型（如 `openai`）
-  - `LLMConfig.Model`：模型名称（因服务商而异）
-  - `LLMConfig.APIUrl`：API 端点 URL（因服务商而异）
-  - `LLMConfig.APIKey`：API 密钥
-  - 参考 LLM 配置指南：[国际站](https://trtc.io/document/68338?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115413)
+- [3/4] LLM 配置 → **建议优先使用 TokenHub**（腾讯云统一 LLM 网关，开箱即用）：
+  - `LLMConfig.LLMType`：`openai`（固定）
+  - `LLMConfig.Model`：`deepseek-v4-flash`（推荐）
+  - `LLMConfig.APIUrl`：
+    - 国际站：`https://tokenhub-intl.tencentcloudmaas.com/v1/chat/completions`
+    - 中国站：`https://tokenhub.tencentmaas.com/v1/chat/completions`
+  - `LLMConfig.APIKey`：在 TokenHub 控制台获取（[国际站](https://console.intl.cloud.tencent.com/tokenhub) | [中国站](https://console.cloud.tencent.com/tokenhub)）
+  - 也支持其他兼容 OpenAI 协议的 LLM，参考配置指南：[国际站](https://trtc.io/document/68338?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115413)
 
 **检查点**：确认用户看到 `✓ 所有密钥已配置完成！`。如果有跳过项，提醒手动编辑 `env.yaml`。
 

@@ -188,14 +188,29 @@ if [ ! -f "$ENV_FILE" ]; then
     fi
     echo ""
 
-    # --- 3/4 LLM API Key ---
+    # --- 3/4 LLM API Key (TokenHub recommended) ---
     printf "%b[3/4] LLM API Key%b\n" "$CYAN" "$NC"
-    printf "  $(msg "Config guide" "LLM 配置指南"): %b${URL_LLM}%b\n" "$BOLD" "$NC"
+    if [ "$_IS_ZH" -eq 1 ]; then
+        printf "  推荐使用 TokenHub（腾讯云 LLM 网关，开箱即用）\n"
+    else
+        printf "  Recommended: TokenHub (Tencent Cloud LLM gateway, ready to use)\n"
+    fi
+    if [ "$DEPLOY_REGION" = "cn" ]; then
+        TOKENHUB_URL="https://tokenhub.tencentmaas.com/v1/chat/completions"
+        printf "  $(msg "TokenHub Console" "TokenHub 控制台"): %bhttps://console.cloud.tencent.com/tokenhub%b\n" "$BOLD" "$NC"
+    else
+        TOKENHUB_URL="https://tokenhub-intl.tencentcloudmaas.com/v1/chat/completions"
+        printf "  $(msg "TokenHub Console" "TokenHub 控制台"): %bhttps://console.intl.cloud.tencent.com/tokenhub%b\n" "$BOLD" "$NC"
+    fi
+    printf "  $(msg "Other LLM guide" "其他 LLM 配置指南"): %b${URL_LLM}%b\n" "$BOLD" "$NC"
     printf "  API Key: " ; read -r INPUT_LLM </dev/tty 2>/dev/null || INPUT_LLM=""
 
     if [ -n "$INPUT_LLM" ]; then
         sed -i.bak "s|APIKey:.*|APIKey: ${INPUT_LLM}|" "$ENV_FILE"
-        ok "$(msg "LLM API Key saved" "LLM API Key 已填入")"
+        # 默认填入 TokenHub APIUrl 和推荐模型
+        sed -i.bak "s|APIUrl:.*|APIUrl: ${TOKENHUB_URL}|" "$ENV_FILE"
+        sed -i.bak "s|Model:.*|Model: deepseek-v4-flash|" "$ENV_FILE"
+        ok "$(msg "LLM configured (TokenHub + deepseek-v4-flash)" "LLM 已配置（TokenHub + deepseek-v4-flash）")"
     else
         warn "$(msg "Skipped, please edit ${ENV_FILE} later" "已跳过，请稍后手动编辑 ${ENV_FILE}")"
     fi

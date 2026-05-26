@@ -152,6 +152,17 @@ LLMConfig:
 ### 支持的 LLM 提供商
 
 任何兼容 OpenAI 协议的 LLM 均可使用，详见官方 LLM 配置指南（[国际站](https://trtc.io/document/68338?product=conversationalai) | [中国站](https://cloud.tencent.com/document/product/647/115413)）：
+
+**推荐：TokenHub（腾讯云统一 LLM 网关，开箱即用）**
+
+| 配置项 | 国际站 (intl) | 中国站 (cn) |
+|--------|-------------|------------|
+| LLMType | `openai` | `openai` |
+| APIUrl | `https://tokenhub-intl.tencentcloudmaas.com/v1/chat/completions` | `https://tokenhub.tencentmaas.com/v1/chat/completions` |
+| Model | `deepseek-v4-flash`（推荐） | `deepseek-v4-flash`（推荐） |
+| APIKey | [国际站 TokenHub 控制台](https://console.intl.cloud.tencent.com/tokenhub) 获取 | [中国站 TokenHub 控制台](https://console.cloud.tencent.com/tokenhub) 获取 |
+
+也支持其他兼容 OpenAI 协议的 LLM：
 - OpenAI / Azure OpenAI
 - DeepSeek
 - 通义千问
