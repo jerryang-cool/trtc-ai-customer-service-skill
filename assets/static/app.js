@@ -629,14 +629,14 @@ async function triggerTransfer() {
 
     // 模拟排队进展（系统通知，同一行更新）
     const queueSteps = {
-        zh: ['正在为您查找空闲客服...', '前方还有 5 位用户，请稍候', '前方还有 3 位用户，请耐心等待', '前方还有 1 位用户，即将为您接通', '正在接通中...'],
-        yue: ['正在為您查找空閒客服...', '前方仲有 5 位用戶，請稍候', '前方仲有 3 位用戶，請耐心等待', '前方仲有 1 位用戶，即將為您接通', '正在接通中...'],
-        en: ['Finding an available agent...', '5 people ahead, please hold', '3 people ahead, please wait', '1 person ahead, almost there', 'Connecting you now...'],
+        zh: ['正在为您查找空闲客服...（演示模式）', '前方还有 5 位用户，请稍候（演示模式）', '前方还有 3 位用户，请耐心等待（演示模式）', '前方还有 1 位用户，即将为您接通（演示模式）', '正在接通中...（演示模式）'],
+        yue: ['正在為您查找空閒客服...（演示模式）', '前方仲有 5 位用戶，請稍候（演示模式）', '前方仲有 3 位用戶，請耐心等待（演示模式）', '前方仲有 1 位用戶，即將為您接通（演示模式）', '正在接通中...（演示模式）'],
+        en: ['Finding an available agent... (demo mode)', '5 people ahead, please hold (demo mode)', '3 people ahead, please wait (demo mode)', '1 person ahead, almost there (demo mode)', 'Connecting you now... (demo mode)'],
     };
     const busyMsg = {
-        zh: '当前人工客服繁忙，已恢复AI客服为您服务',
-        yue: '當前人工客服繁忙，已恢復AI客服為您服務',
-        en: 'All agents busy. AI assistant resumed for you.',
+        zh: '当前人工客服繁忙，已恢复AI客服为您服务（演示模式）',
+        yue: '當前人工客服繁忙，已恢復AI客服為您服務（演示模式）',
+        en: 'All agents busy. AI assistant resumed for you. (demo mode)',
     };
     const steps = queueSteps[USER_CFG.lang] || queueSteps.zh;
     const noticeId = '_transfer_queue';
@@ -1072,6 +1072,7 @@ function bindEvents() {
             const enabled = mode === 0;
             els.groupInterruptDuration.classList.toggle('slider-disabled', !enabled);
             els.sliderInterruptDuration.disabled = !enabled;
+            updateAIForConfigChange();
         }, 0);
         return mode;
     });
@@ -1100,6 +1101,11 @@ function bindEvents() {
     bindSlider(els.sliderVadSilence, els.valVadSilence, 'vadSilenceTime', 'ms');
     bindSlider(els.sliderVadLevel, els.valVadLevel, 'vadLevel');
     bindSlider(els.sliderInterruptDuration, els.valInterruptDuration, 'interruptSpeechDuration', 'ms');
+
+    // 打断时长滑块松手时实时更新 AI 配置
+    if (els.sliderInterruptDuration) {
+        els.sliderInterruptDuration.addEventListener('change', () => updateAIForConfigChange());
+    }
 
     // 客服选择
     els.agentCards.querySelectorAll('.agent-card').forEach(card => {
@@ -1203,6 +1209,7 @@ async function updateAIForLangSwitch() {
             TaskId: STATE.taskId,
             Lang: USER_CFG.lang,
             Gender: STATE.gender,
+            UpdateWelcome: true,
         });
         if (rsp.Response?.Error) {
             console.warn('UpdateAIConversation failed:', rsp.Response.Error.Message);
@@ -1211,6 +1218,25 @@ async function updateAIForLangSwitch() {
         }
     } catch (e) {
         console.warn('UpdateAIConversation error:', e);
+    }
+}
+
+// ========== 对话中调整侧边栏配置 → 实时更新 ==========
+async function updateAIForConfigChange() {
+    if (!STATE.taskId || STATE.callState !== 'active') return;
+    try {
+        const rsp = await postAction('UpdateAIConversation', {
+            TaskId: STATE.taskId,
+            InterruptMode: USER_CFG.interruptMode,
+            InterruptSpeechDuration: USER_CFG.interruptSpeechDuration,
+        });
+        if (rsp.Response?.Error) {
+            console.warn('UpdateAIConversation config failed:', rsp.Response.Error.Message);
+        } else {
+            console.log('🔄 AI config updated: interrupt=%d/%dms', USER_CFG.interruptMode, USER_CFG.interruptSpeechDuration);
+        }
+    } catch (e) {
+        console.warn('UpdateAIConversation config error:', e);
     }
 }
 

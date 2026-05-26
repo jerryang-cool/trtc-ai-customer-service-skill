@@ -378,34 +378,41 @@ def handle_stop_ai_conversation(body: dict) -> dict:
 
 
 def handle_update_ai_conversation(body: dict) -> dict:
-    """对话中切换语言 → 动态更新 TTSConfig + LLMConfig"""
+    """对话中动态更新 AI 配置（语言切换 / 侧边栏配置调整）"""
     task_id = body["TaskId"]
     lang = body.get("Lang", "zh")
     gender = body.get("Gender", "female")
 
-    # 构建新的 TTS 配置（切换语言对应的音色）
-    tts_cfg = {{
-        "TTSType": "flow",
-        "Model": "flow_01_turbo",
-        "VoiceId": get_voice_id(lang, gender),
-        "Language": lang if lang in ("zh", "yue", "en") else "zh",
-        "Speed": 1.0,
-        "Volume": 1.0,
-        "Pitch": 0,
-    }}
+    params = {{"TaskId": task_id}}
 
-    # 构建新的 LLM 配置（切换语言对应的 SystemPrompt）
-    llm_cfg = config.llm_config(lang)
+    # 语言切换 → 更新 TTSConfig + LLMConfig + WelcomeMessage
+    if "Lang" in body:
+        tts_cfg = {{
+            "TTSType": "flow",
+            "Model": "flow_01_turbo",
+            "VoiceId": get_voice_id(lang, gender),
+            "Language": lang if lang in ("zh", "yue", "en") else "zh",
+            "Speed": 1.0,
+            "Volume": 1.0,
+            "Pitch": 0,
+        }}
+        llm_cfg = config.llm_config(lang)
+        params["TTSConfig"] = json.dumps(tts_cfg, ensure_ascii=False)
+        params["LLMConfig"] = json.dumps(llm_cfg, ensure_ascii=False)
 
-    params = {{
-        "TaskId": task_id,
-        "TTSConfig": json.dumps(tts_cfg, ensure_ascii=False),
-        "LLMConfig": json.dumps(llm_cfg, ensure_ascii=False),
-    }}
+        # 同步切换 WelcomeMessage（下次重新进房时使用新语言欢迎语）
+        if body.get("UpdateWelcome"):
+            params["WelcomeMessage"] = config.welcome_message(lang)
+
+    # 侧边栏配置调整 → 更新 InterruptMode / InterruptSpeechDuration
+    if "InterruptMode" in body:
+        params["InterruptMode"] = int(body["InterruptMode"])
+    if "InterruptSpeechDuration" in body:
+        params["InterruptSpeechDuration"] = int(body["InterruptSpeechDuration"])
 
     loguru.logger.info(
-        f"UpdateAIConversation: TaskId={{task_id}}, lang={{lang}}, gender={{gender}}, "
-        f"voice={{get_voice_id(lang, gender)}}"
+        f"UpdateAIConversation: TaskId={{task_id}}, "
+        f"keys={{[k for k in params.keys() if k != 'TaskId']}}"
     )
 
     req = models.UpdateAIConversationRequest()
